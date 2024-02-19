@@ -11,8 +11,8 @@ class Card:
         self.value = val
     
     def show(self):
+        ranks = ["Jack", "Queen", "King", "Ace"]
         if self.value in range(11, 15):             # if the card is a Jack, Queen, King or an Ace
-            ranks = ["Jack", "Queen", "King", "Ace"]
             print(f"{ranks[self.value - 11]} of {self.suit}")
         else:
             print(f"{self.value} of {self.suit}")
@@ -111,6 +111,7 @@ class Game:
 def score_counter(l):
     score = 0
     temp = []
+    # Sorts the card 
     for i in range(len(l)):
         if l[i].value != 14:
             temp.insert(0, l[i])
@@ -121,7 +122,7 @@ def score_counter(l):
     return score
 
 
-def TrialAndError(text):
+def trialAndError(text):
     retry = 0
     while retry < 5:
         answer = input(text)
@@ -174,21 +175,22 @@ def printer(player, hand):
     print(f"{name} cards: ")
     for card in h.cards:
         Card.show(card)
-    print(f"{name} points: {h.score}")
-    print(f"{name} bet: {bet}")
+    print(f"Points in hand: {h.score}")
 
+    msg = ""
     if result_check(result, bet) - bet < 0:
-        print(f"{name} lost {bet} chips.")
+        msg = "lost"
     
     elif result_check(result, bet) - bet > 0:
-        print(f"{name} earned {bet} chips.")
+        msg = "earned"
 
     else:
-        print(f"{name} got back his bet of {bet} chips.")
-    print(f"My total before betting: {p.chips + bet}")
-    p.chips += result_check(result, bet)
-    print(f"My total after betting: {p.chips}")
+        msg = "got back the bet of"
 
+    print(f"{name} {msg} {bet} chips.")
+    print(f"Chips total before betting: {p.chips + bet}")
+    p.chips += result_check(result, bet)
+    print(f"Chips total after betting: {p.chips}")
 
 def get_result(player):
     time.sleep(1)
@@ -203,14 +205,13 @@ def get_result(player):
             result = h.result
             if len(p.hand) == 1:
                 print(f"{p.name}: {result}")
-                printer(p, k)
 
             else:
                 print(f"{p.name}'s hand number {k + 1}: {result}")
                 if k >= 1:
                     print("\n")
                 
-                printer(p, k)
+            printer(p, k)
 
            # p.stats_add(result)
 
@@ -236,17 +237,20 @@ def splitting(deck, player, i):
     
     # puts the second card from the hand to the new hand
     new_h.cards = [h.cards.pop(1)]
+
     # old and new hand recives a new card
     h.cards.append(deck.pop(0)), new_h.cards.append(deck.pop(0))
+
     # sets values to the new hand
     new_h.bet = p.bet
     new_h.double = False
     new_h.result = ""
+
     # sets values for both hands
     h.score = score_counter(h.cards)
     new_h.score = score_counter(new_h.cards)
 
-    print("After the split the hand is the following:")
+    print("The hand after the split:")
     for card in h.cards:
         time.sleep(1)
         Card.show(card)
@@ -369,6 +373,18 @@ def gameplay(player, deck, i, dealer):
             print("Wrong input, try again!")
             time.sleep(1.5)
 
+def deposit(player):
+    p = player
+    chip_amount = trialAndError("\nHow many chips do you want to deposit? ")
+                
+    if chip_amount == "all":        #   Same as "max", check trialAndError
+        p.chips += 50000
+                
+    elif chip_amount > 0:
+        p.chips += chip_amount
+    
+    else:
+        print("Invalid amount of chips, try again!")
 
 def betting(player):
     p = player
@@ -377,22 +393,7 @@ def betting(player):
             answer = input(f"{p.name} have insufficient funds." 
             f" Would {p.name} like to deposit? (Yes or No): ").lower()
             if answer == "yes":
-                chip_amount = TrialAndError(
-                    "\nHow many chips do you want to deposit? ")
-                
-                if chip_amount == "all":
-                    p.chips += 50000
-                
-                elif chip_amount > 0:
-                    p.chips += chip_amount
-                    continue
-
-                elif chip_amount == 0:
-                    break
-
-                else:
-                    print("Invalid amount of chips, try again!")
-                    continue
+                deposit(player)
  
             elif answer == "no":
                 p.result = "left"
@@ -402,7 +403,7 @@ def betting(player):
                 print("Please select one of the choices")
                 continue
 
-        bet = TrialAndError(
+        bet = trialAndError(
             f"How many chips does {p.name} want to bet?: ")
         
         if bet == "all":
@@ -545,6 +546,9 @@ def blackjack(the_deck, player):
     games_done = 0
     for z in range(len(player)):
         p = player[z]
+        if p.result == "left":
+            games_done += 1
+            continue
         h = p.hand[0]
         if h.result != "":
             games_done += 1
@@ -619,48 +623,51 @@ def blackjack(the_deck, player):
 
 def amount_of_players(player):
     player = []
-    '''player.append(Player("acke", 5000))
-    player.append(Player("jb", 5000))
-    player.append(Player("davve", 5000))
-    player.append(Player("jimi", 5000))
-    player.append(Player("virpi", 5000))
-    player.append(Player("vicki", 5000))
-    player.append(Player("jontti", 5000))
-    return player'''
-    while True:
-
-        num_of_players = TrialAndError("\nHow many players want to play?(1 - 7): ")
-                    
-        if num_of_players in range(1,8):
-            for i in range(num_of_players):
-                retry = 0
-                same_name = False
-                while retry < 3:
-                    name = input(f"\nWhat's the name of player {i + 1}? ")
-                    if i > 0:
-                        # Checks players name to see if they are the same
-                        for person in player:
-                            if person.name.lower() == name.lower():
-                                    print(f"{person.name} is already here.")
-                                    retry += 1
-                                    same_name = True
-                                    break
-                            same_name = False   
-                            
-                    
-                    if not same_name:
-                        chips = int(input(f"How many chips does {name} have? "))
-
-                        player.append(Player(name, chips))
-                        break
-                
-                if retry >= 3: print("Too many attempts, next person!") 
-                
-            return player
+    if (input("Play with default players? (y/n)") == 'y'):
         
-        else:
-            print("\nNumber of players is not between 1 and 7. Please try again." )
-            continue
+        player.append(Player("Walter White", 5000))
+        player.append(Player("Hank Schrader", 5000))
+        player.append(Player("Jesse Pinkman", 5000))
+        player.append(Player("Gus Fring", 5000))
+        player.append(Player("Mike Ehrmantraut", 5000))
+        player.append(Player("Saul Goodman", 5000))
+        
+        return player
+    
+    num_of_players = trialAndError("\nHow many players want to play?(1 - 7): ")        
+    
+    if num_of_players in range(1,8):
+        
+        for i in range(num_of_players):
+            retry = 0
+            while retry < 3:
+                name = input(f"\nWhat's the name of player {i + 1}? ")
+                '''
+                |||     Why is it checking if i > 0??
+                |||     TODO: Check out the reasoning behind this
+                '''     
+                if i > 0:
+                    # Checks players name to see if they are the same
+                    for person in player:
+                        if person.name.lower() == name.lower():
+                                print(f"{person.name} is already here.")
+                                retry =+ 1
+                        else: break  
+                        
+            if retry == 3: 
+                print("Too many attempts, next person!")
+                continue
+
+            chips = int(input(f"How many chips does {name} have? "))
+            player.append(Player(name, chips))
+             
+        return player
+    
+    else:
+        print("\nNumber of players is not between 1 and 7. Please try again." )
+        #   To avoid a while loop.
+        #   In the end it does the same thing, but with 'rekursion'.
+        return (amount_of_players(player))
 
 
 def main():
